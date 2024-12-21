@@ -188,9 +188,9 @@
                             </div>
                         </div>
                         <div class="row-md-4">
-                            <button class="btn" style="background-color: #493628; color: white;" onclick="saveBudget()"
-                                type="submit">儲存</button>
-                            <button class="btn" style="background-color: #493628; color: white;"
+                            <button type="submit" class="btn" style="background-color: #493628; color: white;"
+                                onclick="saveBudget()">儲存</button>
+                            <button type="button" class="btn" style="background-color: #493628; color: white;"
                                 onclick="closeBudgetModal()">取消</button>
                         </div>
                     </div>
@@ -309,7 +309,9 @@
 
             entries.forEach(entry => {
                 const date = new Date(entry.time);
-                const dateKey = date.toISOString().split('T')[0];  // yyyy-mm-dd 格式
+                const taiwanOffset = 8 * 60;  // 台灣時間 UTC+8
+                const localTime = new Date(date.getTime() + taiwanOffset * 60 * 1000);  // 轉換為台灣時間
+                const dateKey = localTime.toISOString().split('T')[0];  // yyyy-mm-dd 格式
 
                 if (!groups[dateKey]) {
                     groups[dateKey] = [];
@@ -333,8 +335,9 @@
             const dataTable = document.getElementById('dataTable').querySelector('tbody');
 
             const now = new Date();
-            const currentMonth = now.getMonth();    //當前月份 (0-11)
-            const currentYear = now.getFullYear();  //當前年份
+            const taiwanTime = new Date(now.toLocaleString("en-US", { timeZone: "Asia/Taipei" }));
+            const currentMonth = taiwanTime.getMonth();    //當前月份 (0-11)
+            const currentYear = taiwanTime.getFullYear();  //當前年份
 
             //篩選當前月份的支出和收入
             const currentExpenses = data.filter(item => {
@@ -660,14 +663,14 @@
         function saveBudget() {
             //儲存預算的功能
             const budgetAmount = document.getElementById('budgetAmount').value;
-            const startDate = document.getElementById('startDate').value;
-            const endDate = document.getElementById('endDate').value;
-            //在這裡可以將預算金額和日期進行保存或處理
             if (!budgetAmount) {
                 alert("預算金額為必填！");
                 document.getElementById('budgetAmount').focus(); // 將焦點移到預算金額欄位
                 return false; // 阻止後續執行
             }
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            //在這裡可以將預算金額和日期進行保存或處理
             console.log(`預算金額: ${budgetAmount}, 起始日期: ${startDate}, 結束日期: ${endDate}`);
             updateBudgetInDatabase(budgetAmount, startDate, endDate);
             updateBudgetDisplay(budgetAmount, startDate, endDate);
