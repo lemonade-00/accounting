@@ -183,7 +183,7 @@ public class MyService {
 		return repository.save(oldAccount);
 	}
 
-	@Scheduled(cron = "0 59 22 * * ?")
+	@Scheduled(cron = "0 0 0 * * ?")
 	public void handleRecurringAccounts() {
 		ArrayList<RecurringAccount> recurringAccounts = recurrRepository.findByIsRecurring(true);
 
