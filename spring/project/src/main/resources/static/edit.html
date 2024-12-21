@@ -428,13 +428,12 @@
 
             const formData = new FormData();
             if (!isDelete && !attach) {   //沒按刪除且也沒加附件
-                console.log("@@@")
                 attach = selectedAccount.attach;
                 const data = {
                     category: selectedCategoryInput.value,  //將選擇的類別添加到資料庫中
                     price: price,
                     time: time,
-                    type: selectedType,
+                    accType: selectedType,
                     remark: remark,
                     attach: attach,
                     isRecurring: isRecurring,
