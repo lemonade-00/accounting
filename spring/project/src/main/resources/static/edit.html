@@ -267,6 +267,7 @@
         const selectedIconDiv = document.getElementById('selectedIcon');
         const selectedCategoryInput = document.getElementById('selectedCategory');
         let isDelete = 0;
+        let selectedType;
 
         window.onload = function () {
             fetchSingleData();    //初始載入所有數據
@@ -289,7 +290,7 @@
             const iconClass = getIcon(category);  // 獲取對應的圖標
             const selectedIconDiv = document.getElementById('selectedIcon');
             selectedIconDiv.innerHTML = `<i class="bi bi-${iconClass}"></i>`; // 更新圖標
-            const selectedType = data.type
+            selectedType = data.accType
             document.getElementById('selectedCategory').value = category;   // 將類別填入隱藏的 input 元素中
 
             //重複性處理
@@ -408,7 +409,6 @@
             e.preventDefault();
             const priceInput = document.getElementById('price');
             let price = parseFloat(priceInput.value);
-            let selectedType;
             const time = document.getElementById('time').value;
             const remark = document.getElementById('remark').value; //備註
             let attach = document.getElementById('attach').files[0];  //獲取選擇的檔案
@@ -425,6 +425,7 @@
             //console.log(attach);
             const selectedAccount = JSON.parse(sessionStorage.getItem('selectedAccount'));
             const accountId = selectedAccount ? selectedAccount.id : null;
+            console.log(selectedType)
 
             const formData = new FormData();
             if (!isDelete && !attach) {   //沒按刪除且也沒加附件
@@ -446,7 +447,7 @@
                     category: selectedCategoryInput.value,  //將選擇的類別添加到資料庫中
                     price: price,
                     time: time,
-                    type: selectedType,
+                    accType: selectedType,
                     remark: remark,
                     isRecurring: isRecurring,
                     recurrenceType: recurrenceType,
