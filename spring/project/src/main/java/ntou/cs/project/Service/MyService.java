@@ -126,7 +126,13 @@ public class MyService {
 	}
 
 	public Budget getBudgets(String userID) {
-		return budgetRepository.findByUserId(userID);
+		Budget budget = budgetRepository.findByUserId(userID);
+		LocalDate today = LocalDate.now();
+		if (budget != null && budget.getEndDate().isBefore(today)) {
+			budgetRepository.delete(budget);
+		}
+
+		return budget;
 	}
 
 	public Account getAccount(String id) {
