@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,12 +16,14 @@
         grid-template-columns: 1fr 1fr;
         justify-content: center;
         gap: auto;
-        
+
       }
+
       .chartContainer {
         margin: auto;
         width: 100%;
       }
+
       .tableContainer {
         justify-content: center;
         margin: auto;
@@ -36,30 +39,33 @@
     .tableContainer {
       border: 3px solid #493628;
       border-radius: 5px;
-      background-color:  #AB886D;
+      background-color: #AB886D;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
       padding: 20px;
       overflow-x: auto;
     }
-    button{
+
+    button {
       color: black;
       background-color: #AB886D;
       width: auto;
-      border-radius: 5px ;
+      border-radius: 5px;
     }
 
     table {
       width: 100%;
       border-collapse: separate solid #493628;
       margin: auto;
-      font-size: 12px; /* 縮小整體字體 */
+      font-size: 12px;
+      /* 縮小整體字體 */
     }
 
-    th, td {
+    th,
+    td {
       padding: 10px;
       text-align: left;
       border-bottom: 2px solid #493628;
-      border-radius: 3px ;
+      border-radius: 3px;
     }
 
     th {
@@ -71,19 +77,21 @@
       margin: 20px 0;
     }
 
-    label, input {
+    label,
+    input {
       font-size: 16px;
       margin: 10px 0;
     }
 
-    select{
+    select {
       margin: 10px 0;
       padding: 8px 12px;
       font-size: 12px;
-      border-radius: 5px ;
+      border-radius: 5px;
     }
 
-    select, button {
+    select,
+    button {
       padding: 8px 12px;
       margin: 5px;
       font-size: 14px;
@@ -100,9 +108,10 @@
 
     /* 細節顯示區域樣式 */
     .details-container {
-      font-size: 12px; /* 縮小整體字體 */
+      font-size: 12px;
+      /* 縮小整體字體 */
       display: none;
-      background-color:  #D6C0B3;
+      background-color: #D6C0B3;
       padding: 10px;
       margin-top: 10px;
       border: 2px solid #493628;
@@ -111,12 +120,14 @@
       border-radius: 5px;
     }
 
-    hr{ 
+    hr {
       border: 1px solid #493628;
     }
+
     .visible {
       display: block;
-      font-size: 12px; /* 縮小整體字體 */
+      font-size: 12px;
+      /* 縮小整體字體 */
       padding: 20px;
       margin-top: 20px;
       border: 2px solid #493628;
@@ -124,23 +135,25 @@
       background-color: #D6C0B3;
       box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     }
+
     .hidden {
       display: none;
     }
   </style>
 </head>
+
 <body>
 
   <div class="layout">
     <div><!--左半-->
-      <p id="timeRange" style="text-align:center">之後要放時間段</p>
+      <p id="timeRange" style="text-align:center"></p>
       <div class="chartContainer"></div>
     </div>
     <div><!--右半-->
       <div class="filterContainer">
         <div>
-          <button id = "incomeButton" class = "clickable-row" onclick="filterIncome()">收入</button>
-          <button id = "expenseButton" class = "clickable-row" onclick="filterExpense()">支出</button>
+          <button id="incomeButton" class="clickable-row" onclick="filterIncome()">收入</button>
+          <button id="expenseButton" class="clickable-row" onclick="filterExpense()">支出</button>
         </div>
         <label for="select">選擇篩選條件:
           <select id="select" name="filterType">
@@ -156,16 +169,16 @@
         </div>
         <div id="monthDiv" class="hidden">
           <label for="monthInput">選擇月份:</label>
-          <input type="month" id="monthInput" name="monthInput" min="2018-01" max="" >
+          <input type="month" id="monthInput" name="monthInput" min="2018-01" max="">
           <button onclick="filterDatamonth()">確定</button>
         </div>
         <div id="customDiv" class="hidden">
           <label for="startDate">開始日期:</label>
           <input type="date" id="startDate" name="startDate" max="">
           <label for="endDate">結束日期:</label>
-          <input type="date" id="endDate" name="endDate" max="" >
+          <input type="date" id="endDate" name="endDate" max="">
           <button onclick="filterDatacustom()">確定</button>
-        </div>        
+        </div>
       </div>
       <div class="tableContainer">
         <table>
@@ -193,7 +206,7 @@
     const monthDiv = document.getElementById('monthDiv');
     const customDiv = document.getElementById('customDiv');
 
-    
+
     // 當select改變時切換顯示
     selectElement.addEventListener('change', () => {
       const value = selectElement.value;
@@ -262,49 +275,74 @@
       }
     };
     */
-    window.onload = function () {
-            fetchData();    //初始載入所有數據
-        };
+
     let jsonData = [];
     function fetchData() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                alert('請重新登入');
-                window.location.href = 'index.html';
-            }
-            fetch('/Account', {
-                method: 'GET',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${token}`
-                }
-            })
-                .then(response => {
-                    if (!response.ok) {
-                        if (response.status === 401) {
-                            window.location.href = 'index.html';
-                            throw new Error('請重新登入');
-                        } else {
-                            throw new Error(`${response.status}`);
-                        }
-                    }
-                    return response.json();
-                })
-                .then(data => {
-                    console.log("直接顯示原始 JSON 資料"+data); // 直接顯示原始 JSON 資料
-                    jsonData = data;
-                })
-                .catch(error => {
-                    console.error(error);
-                    alert(error.message);
-                });
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('請重新登入');
+        window.location.href = 'index.html';
+      }
+      fetch('/Account', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         }
+      })
+        .then(response => {
+          if (!response.ok) {
+            if (response.status === 401) {
+              window.location.href = 'index.html';
+              throw new Error('請重新登入');
+            } else {
+              throw new Error(`${response.status}`);
+            }
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log(data); // 直接顯示原始 JSON 資料
+          jsonData = data;
+          initialization()
+        })
+        .catch(error => {
+          console.error(error);
+          alert(error.message);
+        });
+    }
+
     let filteredData = jsonData;
     //初始化currentFilter為支出
-    let currentFilter = 'expense'; 
+    let currentFilter = 'expense';
 
-    // 在 filterData 中保存時間篩選的條件
-      
+    function initialization() {
+      console.log("initialization()");
+      // 設定當前月份的值（格式：YYYY-MM）
+      const today = new Date();
+      selectedMonth = `${today.getFullYear()}-${String(today.getMonth() + 1)}`; // 格式化為 YYYY-MM
+
+      // 使用 selectedMonth 篩選資料
+      if (selectedMonth) {
+        filteredData = jsonData.filter(d => d.account.time.startsWith(selectedMonth));
+
+        // 計算當月範圍（第一天到最後一天）
+        const firstDayOfMonth = new Date(selectedMonth);
+        const lastDayOfMonth = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth() + 1, 0); // 當月最後一天
+
+        // 更新時間範圍文字
+        timeRangeText = `${formatDate(firstDayOfMonth)}~${formatDate(lastDayOfMonth)}`;
+        document.getElementById("timeRange").textContent = timeRangeText;
+        console.log(filteredData);
+        console.log(selectedMonth);
+
+        // 更新表格與圖表
+        updateTableAndChart();
+        clearFilters();
+      }
+    };
+
+
     // 格式化日期為 "YYYY年MM月DD日"
     const formatDate = (date) => {
       const d = new Date(date);
@@ -315,58 +353,62 @@
     };
 
     const filterDatayear = () => {
-        let selectedYear = document.getElementById('yearInput').value;
-        if (selectedYear) {
-            filteredData = jsonData.filter(d => d.account.time.startsWith(selectedYear));
-             // 顯示選擇的年份範圍（從該年的1月1日到12月31日）
-              const firstDayOfYear = new Date(`${selectedYear}-01-01`);
-              const lastDayOfYear = new Date(`${selectedYear}-12-31`);
-              timeRangeText = `${formatDate(firstDayOfYear)}~${formatDate(lastDayOfYear)}`;
-              document.getElementById("timeRange").textContent = `${timeRangeText}`;
-            updateTableAndChart();
-            clearFilters();
-        }
-       
+      let selectedYear = document.getElementById('yearInput').value;
+      console.log(selectedYear)
+      if (selectedYear) {
+        filteredData = jsonData.filter(d => d.account.time.startsWith(selectedYear));
+        // 顯示選擇的年份範圍（從該年的1月1日到12月31日）
+        const firstDayOfYear = new Date(`${selectedYear}-01-01`);
+        const lastDayOfYear = new Date(`${selectedYear}-12-31`);
+        timeRangeText = `${formatDate(firstDayOfYear)}~${formatDate(lastDayOfYear)}`;
+        document.getElementById("timeRange").textContent = `${timeRangeText}`;
+        updateTableAndChart();
+        clearFilters();
+      }
+
     };
 
     const filterDatamonth = () => {
-        let selectedMonth = document.getElementById('monthInput').value;
-        if (selectedMonth) {
-            filteredData = jsonData.filter(d => d.account.time.startsWith(selectedMonth));
-            // 顯示選擇的月份範圍（從該月的第一天到最後一天）
-            const firstDayOfMonth = new Date(selectedMonth);
-            const lastDayOfMonth = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth() + 1, 0); // 取得該月最後一天
-            timeRangeText = `${formatDate(firstDayOfMonth)}~${formatDate(lastDayOfMonth)}`;
-            document.getElementById("timeRange").textContent = `${timeRangeText}`;
-            updateTableAndChart();
-            clearFilters();
-        }
-        
+      let selectedMonth = document.getElementById('monthInput').value;
+      console.log(selectedMonth)
+      if (selectedMonth) {
+        filteredData = jsonData.filter(d => d.account.time.startsWith(selectedMonth));
+        // 顯示選擇的月份範圍（從該月的第一天到最後一天）
+        const firstDayOfMonth = new Date(selectedMonth);
+        const lastDayOfMonth = new Date(firstDayOfMonth.getFullYear(), firstDayOfMonth.getMonth() + 1, 0); // 取得該月最後一天
+        timeRangeText = `${formatDate(firstDayOfMonth)}~${formatDate(lastDayOfMonth)}`;
+        document.getElementById("timeRange").textContent = `${timeRangeText}`;
+        updateTableAndChart();
+        clearFilters();
+      }
+
     };
 
     const filterDatacustom = () => {
-        let startDate = document.getElementById('startDate').value;
-        let endDate = document.getElementById('endDate').value;
-        if (startDate && endDate) {
-            const start = new Date(startDate);
-            const end = new Date(endDate);
-            filteredData = jsonData.filter(d => {
-                const transactionDate = new Date(d.account.time);
-                return transactionDate >= start && transactionDate <= end;
-            });
-            // 顯示自定義篩選的日期範圍
-            const formattedStartDate = formatDate(startDate);
-            const formattedEndDate = formatDate(endDate);
-            timeRangeText = `${formattedStartDate}~${formattedEndDate}`;
-            document.getElementById("timeRange").textContent = `${timeRangeText}`;
-            updateTableAndChart();
-            clearFilters();
-        }
+      let startDate = document.getElementById('startDate').value;
+      let endDate = document.getElementById('endDate').value;
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        filteredData = jsonData.filter(d => {
+          const transactionDate = new Date(d.account.time);
+          return transactionDate >= start && transactionDate <= end;
+        });
+        // 顯示自定義篩選的日期範圍
+        const formattedStartDate = formatDate(startDate);
+        const formattedEndDate = formatDate(endDate);
+        timeRangeText = `${formattedStartDate}~${formattedEndDate}`;
+        document.getElementById("timeRange").textContent = `${timeRangeText}`;
+        updateTableAndChart();
+        clearFilters();
+      }
     };
 
 
     // 更新表格和圖表的函數
     const updateTableAndChart = () => {
+      console.log("updateTableAndChart 被呼叫了");
+      console.log(filteredData);
       const totalIncome = d3.sum(
         filteredData.filter(d => d.account.accType === 'income'),
         d => Math.abs(d.account.price)
@@ -398,20 +440,20 @@
 
     //清掉輸入篩選時間的資料
     function clearFilters() {
-        document.getElementById('monthInput').value = null;
-        document.getElementById('yearInput').value = null;
-        document.getElementById('startDate').value = null;
-        document.getElementById('endDate').value = null;
+      document.getElementById('monthInput').value = null;
+      document.getElementById('yearInput').value = null;
+      document.getElementById('startDate').value = null;
+      document.getElementById('endDate').value = null;
     }
 
     const filterIncome = () => {
-      currentFilter = 'income'; 
+      currentFilter = 'income';
       updateTableAndChart();
       clearFilters();
     };
 
     const filterExpense = () => {
-      currentFilter = 'expense'; 
+      currentFilter = 'expense';
       updateTableAndChart();
       clearFilters();
     };
@@ -429,13 +471,13 @@
 
       // 新增可點擊的表格行
       const rows = tbody.selectAll("tr")
-                        .data(data)
-                        .enter()
-                        .append("tr")
-                        .attr("class", "clickable-row")
-                        .on('click', function(event, d) {
-                          showDetails(d);
-                        });
+        .data(data)
+        .enter()
+        .append("tr")
+        .attr("class", "clickable-row")
+        .on('click', function (event, d) {
+          showDetails(d);
+        });
 
       rows.append("td").text(d => d.item);
       rows.append("td").text(d => d.data);
@@ -458,7 +500,7 @@
       const selectedCategory = data.item;
 
       // 開關功能：如果再次點擊同一類別，隱藏細節區域
-      if (currentlyDisplayedCategory === selectedCategory ) {
+      if (currentlyDisplayedCategory === selectedCategory) {
         detailsContainer.style.display = 'none';
         currentlyDisplayedCategory = null; // 重置為未顯示任何類別
         return;
@@ -501,7 +543,7 @@
       // 顯示細節容器
       detailsContainer.style.display = 'block';
     };
-    
+
     const drawPie = (data) => {
       // RWD 清除原本的圖型
       d3.select('svg').remove();
@@ -512,44 +554,44 @@
       const radius = Math.min(svgWidth, svgHeight) / 2 - margin;
       // 先設定 svg 大小
       const svg = d3.select(".chartContainer")
-                    .append("svg")
-                    .attr("width", svgWidth)
-                    .attr("height", svgHeight);
+        .append("svg")
+        .attr("width", svgWidth)
+        .attr("height", svgHeight);
       // 設定顏色
       const color = d3.scaleOrdinal()
-                      .range(["#D9EAFD", "#CDC1FF", "#F3D0D7", '#BFF6C3', '#CCD3CA']);
+        .range(["#D9EAFD", "#CDC1FF", "#F3D0D7", '#BFF6C3', '#F5EFFF', '#FFF6E3', '#A6AEBF', '#ECB176', '#B5C0D0', '#CCD3CA']);
 
       const piechart = d3.pie()
-                        .value(d => d.data);
+        .value(d => d.data);
 
       const arc = d3.arc()
-                    .innerRadius(0)
-                    .outerRadius(radius);
+        .innerRadius(0)
+        .outerRadius(radius);
 
       const data_ready = piechart(data);
 
       const slices = svg.append("g")
-                        .attr("transform", `translate(${svgWidth / 2}, ${svgHeight / 2})`)
-                        .selectAll("path")
-                        .data(data_ready)
-                        .enter()
-                        .append("path")
-                        .attr("d", arc)
-                        .attr("fill", d => color(d.data.item))
-                        .attr("stroke", "#fff")
-                        .style("stroke-width", "2px");
+        .attr("transform", `translate(${svgWidth / 2}, ${svgHeight / 2})`)
+        .selectAll("path")
+        .data(data_ready)
+        .enter()
+        .append("path")
+        .attr("d", arc)
+        .attr("fill", d => color(d.data.item))
+        .attr("stroke", "#fff")
+        .style("stroke-width", "2px");
 
       // 加入滑鼠互動效果
       slices
         .style('cursor', 'pointer')
-        .on('mouseover', function() {
+        .on('mouseover', function () {
           d3.select(this)
             .transition()
             .duration(500)
             .style("filter", "drop-shadow(2px 4px 6px black)")
             .style('transform', 'scale(1.1)');
         })
-        .on('mouseleave', function() {
+        .on('mouseleave', function () {
           d3.select(this)
             .transition()
             .duration(500)
@@ -558,21 +600,22 @@
         });
 
       const labels = svg.append("g")
-                        .attr("transform", `translate(${svgWidth / 2}, ${svgHeight / 2})`)
-                        .selectAll("text")
-                        .data(data_ready)
-                        .enter()
-                        .append("text")
-                        .text(d => `${d.data.item} (${Math.round((d.data.data / d3.sum(data, d => d.data)) * 100)}%)`)
-                        .attr("transform", d => `translate(${arc.centroid(d)})`)
-                        .attr("dy", "0.35em")
-                        .style("text-anchor", "middle")
-                        .style("font-size", "12px")
-                        .style("fill", "#333");
+        .attr("transform", `translate(${svgWidth / 2}, ${svgHeight / 2})`)
+        .selectAll("text")
+        .data(data_ready)
+        .enter()
+        .append("text")
+        .text(d => `${d.data.item} (${Math.round((d.data.data / d3.sum(data, d => d.data)) * 100)}%)`)
+        .attr("transform", d => `translate(${arc.centroid(d)})`)
+        .attr("dy", "0.35em")
+        .style("text-anchor", "middle")
+        .style("font-size", "12px")
+        .style("fill", "#333");
     };
 
 
     fetchData();
   </script>
 </body>
+
 </html>
