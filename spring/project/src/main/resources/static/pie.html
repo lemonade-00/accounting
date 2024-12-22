@@ -16,10 +16,11 @@
         grid-template-columns: 1fr 1fr;
         justify-content: center;
         gap: auto;
-
       }
 
       .chartContainer {
+        position: relative;
+        /* 或 absolute */
         margin: auto;
         width: 100%;
       }
@@ -32,8 +33,10 @@
     }
 
     .chartContainer {
+      position: relative;
       margin: auto;
       max-width: 800px;
+      padding: 20px;
     }
 
     .tableContainer {
@@ -50,14 +53,15 @@
       background-color: #AB886D;
       width: auto;
       border-radius: 5px;
+      margin: auto;
     }
 
     table {
       width: 100%;
       border-collapse: separate solid #493628;
       margin: auto;
-      font-size: 12px;
-      /* 縮小整體字體 */
+      font-size: 20px;
+      /* 縮小整體字體 font-size: 20px;*/
     }
 
     th,
@@ -139,24 +143,49 @@
     .hidden {
       display: none;
     }
+
+    p {
+      position: relative;
+      /* 或 absolute */
+      z-index: 1;
+    }
+
+    .chartContainer text {
+      z-index: 50;
+      /* 確保文字位於最上層 */
+      font-size: 14px;
+      background-color: rgba(255, 255, 255, 0.8);
+      /* 可選：給文字添加背景色提升可讀性 */
+    }
   </style>
 </head>
 
 <body>
-
+  <!--
+  <nav style="text-align: center; margin-bottom: 20px; padding: 10px; ">
+    <button onclick="navigateToOverview()" style="float: left;margin-right: 10px; background-color: #AB886D; padding: 10px 20px; border: none; border-radius: 5px;">回到檢視頁面</button>
+    <button onclick="navigateToLineChart()" style="float: right;background-color: #AB886D; padding: 10px 20px; border: none; border-radius: 5px;">折線圖</button>
+  </nav>
+  -->
   <div class="layout">
     <div><!--左半-->
       <p id="timeRange" style="text-align:center"></p>
-      <div class="chartContainer"></div>
+      <div class="chartContainer">
+        <svg viewBox="0 0 600 600" preserveAspectRatio="xMidYMid meet"></svg>
+
+      </div>
     </div>
     <div><!--右半-->
       <div class="filterContainer">
         <div>
           <button id="incomeButton" class="clickable-row" onclick="filterIncome()">收入</button>
           <button id="expenseButton" class="clickable-row" onclick="filterExpense()">支出</button>
+          <button onclick="navigateToOverview()" class="clickable-row">回到檢視頁面</button>
+          <button onclick="navigateToLineChart()" class="clickable-row">折線圖</button>
         </div>
         <label for="select">選擇篩選條件:
           <select id="select" name="filterType">
+            <option></option>
             <option value="選擇年份">選擇年份</option>
             <option value="選擇月份">選擇月份</option>
             <option value="自訂義篩選">自訂義篩選</option>
@@ -200,6 +229,15 @@
 
   <script src="https://d3js.org/d3.v7.min.js"></script>
   <script>
+    function navigateToOverview() {
+      window.location.href = 'view.html';
+    }
+
+    function navigateToLineChart() {
+      // 如果你有折線圖頁面的URL，將其替換為下面的URL
+      window.location.href = 'line.html';
+    }
+
     // 監聽 datalist 選項的改變
     const selectElement = document.getElementById('select');
     const yearDiv = document.getElementById('yearDiv');
@@ -258,8 +296,8 @@
       });
     });
 
-
     /*
+    
     //用json檔
     //const url = 'https://raw.githubusercontent.com/YRaynott/Software-Engineering/main/test.json';//吳郁涵的
     const url = "https://raw.githubusercontent.com/Kunishy/gittest/refs/heads/master/test.json"
@@ -274,8 +312,8 @@
         console.error('Error fetching data:', error);
       }
     };
-    */
-
+  */
+    //-----------------------------------------------------------------------------------------------------
     let jsonData = [];
     function fetchData() {
       const token = localStorage.getItem('token');
@@ -311,7 +349,7 @@
           alert(error.message);
         });
     }
-
+    //-----------------------------------------------------------------------------------------------------
     let filteredData = jsonData;
     //初始化currentFilter為支出
     let currentFilter = 'expense';
@@ -476,7 +514,7 @@
         .append("tr")
         .attr("class", "clickable-row")
         .on('click', function (event, d) {
-          showDetails(d);
+          showDetails(d, d.item);
         });
 
       rows.append("td").text(d => d.item);
@@ -486,46 +524,43 @@
 
     // 顯示細節資訊
     let currentlyDisplayedCategory = null; // 用於追蹤目前顯示的類別
+    let selectedCategory;
     // 移除細節欄位
     const removeDetails = () => {
       const detailsContainer = document.getElementById('details-container');
       detailsContainer.style.display = 'none';
     }
     // 更新細節
-    const showDetails = (data) => {
+    const showDetails = (data, selectedCategory) => {
       const detailsContainer = document.getElementById('details-container');
       const detailsContent = document.getElementById('details-content');
 
-      // 獲取點擊的類別名稱
-      const selectedCategory = data.item;
+      // 根據點擊的內容來獲取所選類別
+      //const selectedCategory = data.data ? data.data.item : data.item;  // 根據需要選擇 data.data 或 data.item
 
       // 開關功能：如果再次點擊同一類別，隱藏細節區域
       if (currentlyDisplayedCategory === selectedCategory) {
         detailsContainer.style.display = 'none';
-        currentlyDisplayedCategory = null; // 重置為未顯示任何類別
+        currentlyDisplayedCategory = null;
         return;
       }
 
-      // 更新目前顯示的類別
       currentlyDisplayedCategory = selectedCategory;
 
-      // 從 jsonData 中篩選出該類別的所有交易記錄
+      // 從 filteredData 中篩選出對應的資料
       const relatedTransactions = filteredData.filter(d => d.account.category === selectedCategory);
 
-      // 如果有相關交易，逐筆顯示細項
-      if (relatedTransactions.length > 0) {
-        let detailsHTML = `
-          <h3>類別: ${selectedCategory}</h3>
-          <ul>
-        `;
+      let detailsHTML = `
+        <h3>類別: ${selectedCategory}</h3>
+        <ul>
+      `;
 
+      if (relatedTransactions.length > 0) {
         relatedTransactions.forEach((transaction, index) => {
           const account = transaction.account;
-          // 只有非第一筆交易加上 <hr>
           if (index > 0) {
             detailsHTML += `<hr>`;
           }
-
           detailsHTML += `
             <li>
               <p>金額: ${account.price}</p>
@@ -534,29 +569,35 @@
             </li>
           `;
         });
-
-        detailsHTML += `</ul>`;
-        detailsContent.innerHTML = detailsHTML;
       } else {
-        detailsContent.innerHTML = `<p>無相關交易記錄</p>`;
+        detailsHTML += `<li>無相關交易記錄</li>`;
       }
+
+      detailsHTML += `</ul>`;
+      detailsContent.innerHTML = detailsHTML;
+
       // 顯示細節容器
       detailsContainer.style.display = 'block';
     };
 
+
+
     const drawPie = (data) => {
-      // RWD 清除原本的圖型
+      // RWD 清除原本的圖形
       d3.select('svg').remove();
+
       // svg圖形區大小、邊界
       const svgWidth = parseInt(d3.select(".chartContainer").style("width"));
       const svgHeight = svgWidth * 0.8;
       const margin = 40;
-      const radius = Math.min(svgWidth, svgHeight) / 2 - margin;
-      // 先設定 svg 大小
+      const radius = Math.min(svgWidth, svgHeight) / 2.15 - margin;
+
+      // 設定 svg 大小
       const svg = d3.select(".chartContainer")
         .append("svg")
         .attr("width", svgWidth)
         .attr("height", svgHeight);
+
       // 設定顏色
       const color = d3.scaleOrdinal()
         .range(["#D9EAFD", "#CDC1FF", "#F3D0D7", '#BFF6C3', '#F5EFFF', '#FFF6E3', '#A6AEBF', '#ECB176', '#B5C0D0', '#CCD3CA']);
@@ -568,11 +609,17 @@
         .innerRadius(0)
         .outerRadius(radius);
 
+      const outerArc = d3.arc()
+        .innerRadius(radius * 1.2)
+        .outerRadius(radius * 1.2);
+
       const data_ready = piechart(data);
 
-      const slices = svg.append("g")
-        .attr("transform", `translate(${svgWidth / 2}, ${svgHeight / 2})`)
-        .selectAll("path")
+      const chartGroup = svg.append("g")
+        .attr("transform", `translate(${svgWidth / 2}, ${svgHeight / 2})`);
+
+      // 繪製扇形
+      const slices = chartGroup.selectAll("path")
         .data(data_ready)
         .enter()
         .append("path")
@@ -584,7 +631,8 @@
       // 加入滑鼠互動效果
       slices
         .style('cursor', 'pointer')
-        .on('mouseover', function () {
+        .on('mouseover', function (event, d) {
+          showDetails(d, d.data.item);
           d3.select(this)
             .transition()
             .duration(500)
@@ -599,17 +647,38 @@
             .style('transform', 'scale(1)');
         });
 
-      const labels = svg.append("g")
-        .attr("transform", `translate(${svgWidth / 2}, ${svgHeight / 2})`)
-        .selectAll("text")
+      // 繪製標籤連接線
+      chartGroup.selectAll("polyline")
+        .data(data_ready)
+        .enter()
+        .append("polyline")
+        .attr("stroke", "black")
+        .attr("stroke-width", 1)
+        .attr("fill", "none")
+        .attr("points", d => {
+          const posA = arc.centroid(d);  // 扇形中心點
+          const posB = outerArc.centroid(d);  // 外圓弧上的點
+
+          // 設置偏移量為 5，將引導線拉近圓餅圖
+          const offset = 5;  // 將這個值設為較小的數字，縮短引導線與圓餅圖的距離
+          const posC = [posB[0] + (posB[0] > 0 ? offset : -offset), posB[1]];  // 偏移點
+          return [posA, posB, posC];  // 返回點的順序
+        });
+
+
+      // 繪製標籤文字
+      chartGroup.selectAll("text")
         .data(data_ready)
         .enter()
         .append("text")
         .text(d => `${d.data.item} (${Math.round((d.data.data / d3.sum(data, d => d.data)) * 100)}%)`)
-        .attr("transform", d => `translate(${arc.centroid(d)})`)
-        .attr("dy", "0.35em")
-        .style("text-anchor", "middle")
-        .style("font-size", "12px")
+        .attr("transform", d => {
+          const pos = outerArc.centroid(d);
+          pos[0] += (pos[0] > 0 ? 20 : -20); // 偏移標籤以避免重疊
+          return `translate(${pos})`;
+        })
+        .attr("text-anchor", d => (d.startAngle + d.endAngle) / 2 > Math.PI ? "end" : "start")
+        .style("font-size", "18px")
         .style("fill", "#333");
     };
 
