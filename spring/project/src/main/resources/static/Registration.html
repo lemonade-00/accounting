@@ -96,6 +96,18 @@
 		function validate() {
 			var pw1 = document.getElementById("pw1").value;
 			var pw2 = document.getElementById("pw2").value;
+			var hint = document.getElementById("hint");
+			var submit = document.getElementById("submit");
+			var getcode = document.getElementById("getcode");
+
+			var passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,12}$/;
+
+			if (!passwordRegex.test(pw1)) {
+				hint.innerHTML = "<font color='red'>密碼需為6-12位且包含英文和數字</font>";
+				submit.disabled = true;
+				getcode.disabled = true;
+				return;
+			}
 
 			if (pw1 == pw2) {
 				document.getElementById("hint").innerHTML = "<font color=#00FA9A>兩次密碼相同</font>";
