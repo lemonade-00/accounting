@@ -1,0 +1,482 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+
+<body>
+  <style>
+    body {
+      background-color: #D6C0B3;
+      font-family: Arial, sans-serif;
+    }
+
+    @media (min-width: 768px) {
+      .layout {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        /* 增加區域間的間距 */
+        align-items: start;
+        /* 對齊兩個區域的頂部 */
+        margin: 20px;
+        /* 整個內容與邊界的距離 */
+      }
+
+      .chartContainer {
+        margin: auto;
+        width: 100%;
+      }
+
+      .tableContainer {
+        justify-content: center;
+        margin: auto;
+        width: 80%;
+      }
+    }
+
+    .chart {
+      width: auto;
+      min-width: 300px;
+      margin: auto;
+      position: relative;
+    }
+
+    .tableContainer {
+      margin: auto;
+      margin-top: 20px;
+      border: 3px solid #493628;
+      border-radius: 5px;
+      background-color: #AB886D;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: separate solid #493628;
+      margin: auto;
+
+    }
+
+    th,
+    td {
+      padding: 10px;
+      text-align: left;
+      border-bottom: 2px solid #493628;
+      border-radius: 3px;
+    }
+
+    th {
+      background-color: #F8EDE3;
+    }
+
+    select {
+      margin: 10px 0;
+      padding: 8px 12px;
+      font-size: 12px;
+      border-radius: 5px;
+    }
+
+    .legendContainer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 16px;
+      margin-right: 8px;
+    }
+
+    .legendContainer div {
+      display: flex;
+      align-items: center;
+    }
+
+    .legendContainer span {
+      margin-left: 8px;
+
+    }
+
+    .clickable-row {
+      cursor: pointer;
+    }
+
+    button {
+      min-width: 80px;
+      color: black;
+      padding: 8px 12px;
+      background-color: #AB886D;
+      width: auto;
+      border-radius: 5px;
+      font-size: medium;
+    }
+
+    .filterContainer {
+      text-align: center;
+      margin: 20px 0;
+    }
+  </style>
+  <div class="layout">
+    <div class="chartContainer">
+      <!-- 左半 -->
+      <div style="text-align:center">
+        <label for="year-select">選擇年份：</label>
+        <select id="year-select"></select>
+      </div>
+      <div class="chart"></div>
+      <div>
+        <input type="checkbox" id="toggle-income" checked> <label for="toggle-income">收入</label>
+        <input type="checkbox" id="toggle-expense" checked> <label for="toggle-expense">支出</label>
+        <div class="legendContainer"></div>
+      </div>
+
+    </div>
+    <div class="filterContainer">
+      <!-- 右半 -->
+      <div>
+        <button onclick="navigateToOverview()" class="clickable-row">回到檢視頁面</button>
+        <button onclick="navigateToPieChart()" class="clickable-row">圓餅圖</button>
+      </div>
+      <div class="tableContainer">
+        <table>
+          <thead>
+            <tr>
+              <th>月份</th>
+              <th>收入</th>
+              <th>支出</th>
+              <th>餘額</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+  <!-- 新增圖例容器 -->
+  <div class="legendContainer"></div>
+
+
+
+  <script src="https://d3js.org/d3.v7.min.js"></script>
+  <script>
+    function navigateToOverview() {
+      window.location.href = 'view.html';
+    }
+
+    function navigateToPieChart() {
+      // 如果你有折線圖頁面的URL，將其替換為下面的URL
+      window.location.href = 'pie.html';
+    }
+
+    const initializeYearSelector = () => {
+      const currentYear = new Date().getFullYear();
+      const yearSelect = document.getElementById('year-select');
+
+      for (let year = currentYear; year >= currentYear - 10; year--) {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      }
+
+      yearSelect.addEventListener('change', () => {
+        fetchData(yearSelect.value);
+      });
+
+      yearSelect.value = currentYear;
+    };
+
+    let currentYearData = []; // 全局變數，保存當前年份的數據
+    //-----------------------------------------------------------------------------------------------------
+    /*
+      const url = "https://raw.githubusercontent.com/Kunishy/gittest/refs/heads/master/test.json";
+      // 更新 fetchData 函數，保存過濾後的數據
+      const fetchData = async (selectedYear) => {
+        try {
+          const response = await fetch(url);
+          const jsonData = await response.json();
+    
+          const filteredData = jsonData.filter(d => {
+            const date = new Date(d.account?.time || d.recurringAccount?.time);
+            return date.getFullYear() === parseInt(selectedYear, 10);
+          });
+    
+          currentYearData = processData(filteredData); // 保存當前年份的數據
+          populateTable(currentYearData);
+          drawChart(currentYearData); // 基於當前年份數據繪圖
+        } catch (error) {
+          console.error("Error fetching data:", error);
+        }
+      };
+    */
+    //-----------------------------------------------------------------------------------------------------
+
+    let jsonData = [];
+    let filteredData = [];
+    const fetchData = async (selectedYear) => {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        alert('請重新登入');
+        window.location.href = 'index.html';
+      }
+      fetch('/Account', {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      })
+        .then(response => {
+          if (!response.ok) {
+            if (response.status === 401) {
+              window.location.href = 'index.html';
+              throw new Error('請重新登入');
+            } else {
+              throw new Error(`${response.status}`);
+            }
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log(data); // 直接顯示原始 JSON 資料
+          jsonData = data.filter(d => {
+            const date = new Date(d.account?.time || d.recurringAccount?.time);
+            return date.getFullYear() === parseInt(selectedYear, 10);
+          });
+          filteredData = jsonData;
+          currentYearData = processData(filteredData); // 保存當前年份的數據
+          populateTable(currentYearData);
+          drawChart(currentYearData); // 基於當前年份數據繪圖
+        })
+        .catch(error => {
+          console.error(error);
+          alert(error.message);
+        });
+    }
+
+
+    //-----------------------------------------------------------------------------------------------------
+    function populateTable(monthlyData) {
+      const tbody = document.querySelector("table tbody");
+      tbody.innerHTML = "";
+
+      monthlyData.forEach((data) => {
+        const row = document.createElement("tr");
+        const balance = Math.round(data.income - data.expense); // 確保餘額也去掉小數點
+        row.innerHTML = `
+        <td>${data.month}月</td>
+        <td>${Math.round(data.income)}</td>
+        <td>${Math.round(data.expense)}</td>
+        <td>${balance}</td>
+      `;
+
+        tbody.appendChild(row);
+      });
+    }
+
+
+    function processData(data) {
+      const monthlyTotals = Array.from({ length: 12 }, (_, i) => ({ month: i + 1, expense: 0, income: 0 }));
+
+      data.forEach(d => {
+        const entries = [d.account, d.recurringAccount].filter(Boolean);
+        entries.forEach(entry => {
+          const date = new Date(entry.time);
+          const month = date.getMonth();
+          if (entry.accType === 'expense') {
+            monthlyTotals[month].expense += Math.abs(entry.price);
+          } else if (entry.accType === 'income') {
+            monthlyTotals[month].income += entry.price;
+          }
+        });
+      });
+
+      return monthlyTotals;
+    }
+
+    initializeYearSelector();
+    fetchData(new Date().getFullYear());
+
+    // 更新 drawLegend 添加交互功能
+    function drawLegend(showIncome, showExpense) {
+      const legendContainer = d3.select(".legendContainer");
+      legendContainer.html("");
+
+      if (showIncome) {
+        const incomeLegend = legendContainer.append("div")
+          .style("cursor", "pointer")
+          .on("click", () => {
+            document.getElementById('toggle-income').click();
+          });
+
+        incomeLegend.append("div")
+          .style("width", "12px")
+          .style("height", "12px")
+          .style("background-color", "#20B2AA")
+          .style("margin-right", "8px");
+        incomeLegend.append("span").text("收入");
+      }
+
+      if (showExpense) {
+        const expenseLegend = legendContainer.append("div")
+          .style("cursor", "pointer")
+          .on("click", () => {
+            document.getElementById('toggle-expense').click();
+          });
+
+        expenseLegend.append("div")
+          .style("width", "12px")
+          .style("height", "12px")
+          .style("background-color", "#DC143C")
+          .style("margin-right", "8px");
+        expenseLegend.append("span").text("支出");
+      }
+    }
+
+
+    // 更新圖例時重新調用
+    document.getElementById('toggle-income').addEventListener('change', () => {
+      drawLegend(
+        document.getElementById('toggle-income').checked,
+        document.getElementById('toggle-expense').checked
+      );
+    });
+
+    document.getElementById('toggle-expense').addEventListener('change', () => {
+      drawLegend(
+        document.getElementById('toggle-income').checked,
+        document.getElementById('toggle-expense').checked
+      );
+    });
+
+    // 初始化圖例
+    drawLegend(true, true);
+
+    // 修改 drawChart 函數，直接使用全局數據
+    function drawChart(monthlyData) {
+      d3.select('.chart svg').remove();
+
+      const showIncome = document.getElementById('toggle-income').checked;
+      const showExpense = document.getElementById('toggle-expense').checked;
+
+      const rwdSvgWidth = parseInt(d3.select('.chart').style('width'));
+      const rwdSvgHeight = rwdSvgWidth * 0.6;
+      const margin = { top: 60, right: 20, bottom: 60, left: 100 };
+
+      const svg = d3.select('.chart')
+        .append('svg')
+        .attr('width', rwdSvgWidth)
+        .attr('height', rwdSvgHeight);
+
+      const xScale = d3.scaleLinear()
+        .domain([1, 12])
+        .range([margin.left, rwdSvgWidth - margin.right]);
+
+      const yScale = d3.scaleLinear()
+        .domain([0, d3.max(monthlyData, d => Math.max(d.expense, d.income)) * 2]) // 給y軸多一點空間
+        .range([rwdSvgHeight - margin.bottom, margin.top]);
+
+      const xAxis = d3.axisBottom(xScale).ticks(12).tickFormat(d => `${d}月`);
+      const yAxis = d3.axisLeft(yScale);
+
+      svg.append('g')
+        .attr('transform', `translate(0,${rwdSvgHeight - margin.bottom})`)
+        .call(xAxis)
+        .selectAll("text")
+        .style("font-size", "12px");
+
+      svg.append('g')
+        .attr('transform', `translate(${margin.left},0)`)
+        .call(yAxis)
+        .selectAll("text")
+        .style("font-size", "12px");
+
+      // 添加背景網格線
+      svg.append("g")
+        .attr("class", "grid")
+        .call(d3.axisLeft(yScale).ticks(5).tickSize(-rwdSvgWidth + margin.left + margin.right).tickFormat(""))
+        .attr("transform", `translate(${margin.left},0)`)
+        .selectAll("line")
+        .attr("stroke", "#e0e0e0");
+
+      const lineGenerator = d3.line()
+        .x(d => xScale(d.month))
+        .y(d => yScale(d.expense))
+        .curve(d3.curveMonotoneX); // 圓滑曲線
+
+      if (showExpense) {
+        svg.append('path')
+          .datum(monthlyData)
+          .attr('fill', 'none')
+          .attr('stroke', '#DC143C')
+          .attr('stroke-width', 2)
+          .attr('d', lineGenerator.y(d => yScale(d.expense)));
+
+        svg.selectAll(".expense-point")
+          .data(monthlyData)
+          .enter()
+          .append("circle")
+          .attr("cx", d => xScale(d.month))
+          .attr("cy", d => yScale(d.expense))
+          .attr("r", 4)
+          .attr("fill", "#DC143C");
+      }
+
+      if (showIncome) {
+        svg.append('path')
+          .datum(monthlyData)
+          .attr('fill', 'none')
+          .attr('stroke', '#20B2AA')
+          .attr('stroke-width', 2)
+          .attr('d', lineGenerator.y(d => yScale(d.income)));
+
+        svg.selectAll(".income-point")
+          .data(monthlyData)
+          .enter()
+          .append("circle")
+          .attr("cx", d => xScale(d.month))
+          .attr("cy", d => yScale(d.income))
+          .attr("r", 4)
+          .attr("fill", "#20B2AA");
+      }
+
+      // 添加圖例
+      const legend = svg.append("g")
+        .attr("transform", `translate(${rwdSvgWidth - 120},${margin.top})`);
+
+      // 添加標題
+      svg.append("text")
+        .attr("x", rwdSvgWidth / 2)
+        .attr("y", margin.top / 2)
+        .attr("text-anchor", "middle")
+        .attr("font-size", "20px")
+        .attr("font-weight", "bold")
+        .text("年度收入與支出圖表");
+
+      // x 軸標題
+      svg.append("text")
+        .attr("x", rwdSvgWidth / 2)
+        .attr("y", rwdSvgHeight - 10)
+        .attr("text-anchor", "middle")
+        .text("月份")
+        .style("font-size", "18px");
+
+      // y 軸標題
+      svg.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -(rwdSvgHeight / 2))
+        .attr("y", 20)
+        .attr("text-anchor", "middle")
+        .text("總金額")
+        .style("font-size", "18px");
+    }
+
+    // 監聽按鈕變化，重新繪製圖表
+    document.getElementById('toggle-income').addEventListener('change', () => drawChart(currentYearData));
+    document.getElementById('toggle-expense').addEventListener('change', () => drawChart(currentYearData));
+
+  </script>
+</body>
+
+</html>
