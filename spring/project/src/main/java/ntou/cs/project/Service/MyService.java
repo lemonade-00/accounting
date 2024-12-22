@@ -156,12 +156,14 @@ public class MyService {
 		oldAccount.setTime(LocalDateTime.parse(time.toString()));
 
 		if (attach == null) {
-
 			if (oldAccount.getAttach() != null && !oldAccount.getAttach().equals(request.getAttach())) {
 				deleteAttach(oldAccount.getAttach());
 				oldAccount.setAttach(null);
 			}
 		} else {
+			if (oldAccount.getAttach() != null) {
+				deleteAttach(oldAccount.getAttach());
+			}
 			String girdAttach = saveAttach(attach);
 			oldAccount.setAttach(girdAttach);
 		}
