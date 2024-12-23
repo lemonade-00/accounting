@@ -19,4 +19,7 @@ public interface AccountRepository extends MongoRepository<Account, String> {
 
     @Query("{ 'userID': ?0 }")
     ArrayList<Account> getAllAccountsByUserId(String userID, org.springframework.data.domain.Sort sort);
+
+    @Query("{ 'recurrID': ?0 }")
+    ArrayList<Account> getAccountByrecurrID(String recurrID);
 }
