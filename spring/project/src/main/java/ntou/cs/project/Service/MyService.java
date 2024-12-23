@@ -9,6 +9,7 @@ import org.bson.types.ObjectId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.gridfs.GridFsTemplate;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.scheduling.annotation.Scheduled;
 
 import java.util.*;
@@ -87,11 +88,19 @@ public class MyService {
 	}
 
 	public void deleteAccount(String id) {
-		Account account = repository.getAccountByID(id);
-		if (account.getAttach() != null) {
-			deleteAttach(account.getAttach());
-		}
+		Account acc = repository.getAccountByID(id);
 		repository.deleteById(id);
+		deleteRecur(acc.getRecurrID());
+	}
+
+	@Async
+	private void deleteRecur(String id) {
+		if (id != null) {
+			ArrayList<Account> accounts = repository.getAccountByrecurrID(id);
+			if (accounts.size() == 0) {
+				recurrRepository.deleteById(id);
+			}
+		}
 	}
 
 	private void deleteAttach(String attachId) {
@@ -185,7 +194,7 @@ public class MyService {
 		return repository.save(oldAccount);
 	}
 
-	@Scheduled(cron = "0 0 0 * * ?")
+	@Scheduled(cron = "0 0 1 * * ?")
 	public void handleRecurringAccounts() {
 		ArrayList<RecurringAccount> recurringAccounts = recurrRepository.findByIsRecurring(true);
 
