@@ -3,7 +3,7 @@ package ntou.cs.project.Controller;
 import ntou.cs.project.Service.MyService;
 import ntou.cs.project.Common.*;
 import ntou.cs.project.Deal.*;
-import ntou.cs.project.repository.*;
+import ntou.cs.project.Exception.*;
 
 import org.springframework.http.MediaType;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +33,6 @@ public class AccountsController {
 	private MyService myService;
 
 	@Autowired
-	private AccountRepository repository;
-
-	@Autowired
 	private GridFsTemplate gridFsTemplate;
 
 	@PostMapping(value = "/addAccount", consumes = "multipart/form-data") // 新增帳目
@@ -49,6 +46,9 @@ public class AccountsController {
 		AccountRequest request = objectMapper.readValue(data, AccountRequest.class);
 		String girdAttach = null;
 		if (attach != null && !attach.isEmpty()) {
+			if (attach.getSize() > 6 * 1024 * 1024) {
+				throw new FileSizeExceededException("附件內容過大");
+			}
 			girdAttach = myService.saveAttach(attach);
 		}
 
@@ -58,7 +58,6 @@ public class AccountsController {
 				.path("/{id}")
 				.buildAndExpand(accounts.getID())
 				.toUri();
-		System.out.println(repository.findAll());
 		return ResponseEntity.created(location).body(accounts);
 	}
 
