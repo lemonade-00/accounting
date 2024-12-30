@@ -36,7 +36,7 @@ public class AccountsController {
 	private GridFsTemplate gridFsTemplate;
 
 	@PostMapping(value = "/addAccount", consumes = "multipart/form-data") // 新增帳目
-	public ResponseEntity<Account> createAccount(
+	public ResponseEntity<?> createAccount(
 			@RequestParam("data") String data,
 			@RequestParam(value = "attach", required = false) MultipartFile attach) throws Exception {
 
@@ -45,20 +45,28 @@ public class AccountsController {
 		ObjectMapper objectMapper = new ObjectMapper();
 		AccountRequest request = objectMapper.readValue(data, AccountRequest.class);
 		String girdAttach = null;
-		if (attach != null && !attach.isEmpty()) {
-			if (attach.getSize() > 6 * 1024 * 1024) {
-				throw new FileSizeExceededException("附件內容過大");
+		try {
+			if (attach != null && !attach.isEmpty()) {
+				if (attach.getSize() > 6 * 1024 * 1024) {
+					throw new FileSizeExceededException("附件檔案過大");
+				}
+				girdAttach = myService.saveAttach(attach);
 			}
-			girdAttach = myService.saveAttach(attach);
+
+			Account accounts = myService.createAccount(request, girdAttach, userId);
+			URI location = ServletUriComponentsBuilder
+					.fromCurrentRequest()
+					.path("/{id}")
+					.buildAndExpand(accounts.getID())
+					.toUri();
+			return ResponseEntity.created(location).body(accounts);
+		} catch (Exception ex) {
+			return ResponseEntity.status(HttpStatus.PAYLOAD_TOO_LARGE)
+					.body(Map.of(
+							"status", false,
+							"message", ex.getMessage()));
 		}
 
-		Account accounts = myService.createAccount(request, girdAttach, userId);
-		URI location = ServletUriComponentsBuilder
-				.fromCurrentRequest()
-				.path("/{id}")
-				.buildAndExpand(accounts.getID())
-				.toUri();
-		return ResponseEntity.created(location).body(accounts);
 	}
 
 	@PostMapping(value = "/budget")
