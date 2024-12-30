@@ -386,8 +386,13 @@
             })
                 .then(response => response.json())
                 .then(data => {
-                    alert('帳目新增成功');
-                    window.location.href = 'view.html';
+                    if (data.status) {
+                        alert('帳目新增成功');
+                        window.location.href = 'view.html';
+                    } else {
+                        alert(data.message || '新增帳目時發生錯誤');
+                    }
+
                 })
                 .catch((error) => {
                     console.error('錯誤:', error);
