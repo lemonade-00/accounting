@@ -384,7 +384,14 @@
                 },
                 body: formData,
             })
-                .then(response => response.json())
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(text => {
+                            throw new Error(text.message || `HTTP ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
                 .then(data => {
                     if (data.status) {
                         alert('帳目新增成功');
@@ -396,7 +403,7 @@
                 })
                 .catch((error) => {
                     console.error('錯誤:', error);
-                    alert('新增帳目時發生錯誤');
+                    alert(error.message || '新增帳目時發生錯誤');
                 });
         });
     </script>
